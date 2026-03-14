@@ -240,6 +240,7 @@ export const useSendMessage = ({
             ...(silent ? { silent } : {}),
             ...(action === "respond" && task_id ? { task_id } : {}),
         };
+        console.log("Variables ", variables)
         emitEventToParent('MESSAGE_SENT', payload.message);
 
         let planningStreamBuffer = "";

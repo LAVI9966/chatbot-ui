@@ -13,6 +13,8 @@ export interface $AppInfoReduxType {
         isChatbotOpen: boolean,
         hideFullScreenButton: boolean,
         hideCloseButton: boolean,
+        showFullScreenButton?: boolean,
+        showCloseButton?: boolean,
         callToken: string,
         serviceChanged: string, //name of the service
         modelChanged: string, //name of the model

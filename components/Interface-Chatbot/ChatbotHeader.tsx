@@ -339,13 +339,13 @@ const ChatbotHeader: React.FC<ChatbotHeaderProps> = ({ preview = false, chatSess
 
   const {
     allowModalSwitch,
-    hideCloseButton,
+    showCloseButton,
     chatTitle,
     chatIcon,
     chatSubTitle,
     allowBridgeSwitchViaProp,
     subThreadList,
-    hideFullScreenButton,
+    showFullScreenButton,
     isHelloUser,
     teams,
     agentTeamName,
@@ -355,8 +355,8 @@ const ChatbotHeader: React.FC<ChatbotHeaderProps> = ({ preview = false, chatSess
     return ({
       isMobileSDK: state.Hello?.[chatSessionId]?.helloConfig?.isMobileSDK || false,
       allowModalSwitch: state.Interface?.[chatSessionId]?.allowModalSwitch || false,
-      hideCloseButton: typeof show_close_button === 'boolean' ? !show_close_button : state.appInfo?.[tabSessionId]?.hideCloseButton || false,
-      hideFullScreenButton: state.appInfo?.[tabSessionId]?.hideFullScreenButton || false,
+      showCloseButton: typeof show_close_button === 'boolean' ? show_close_button : (state.appInfo?.[tabSessionId]?.showCloseButton ?? !(state.appInfo?.[tabSessionId]?.hideCloseButton || false)),
+      showFullScreenButton: state.appInfo?.[tabSessionId]?.showFullScreenButton ?? !(state.appInfo?.[tabSessionId]?.hideFullScreenButton || false),
       chatTitle: state.Interface?.[chatSessionId]?.chatTitle || "",
       chatSubTitle: state.Interface?.[chatSessionId]?.chatSubTitle || "",
       chatIcon: state.Interface?.[chatSessionId]?.chatIcon || "",
@@ -553,7 +553,7 @@ const ChatbotHeader: React.FC<ChatbotHeaderProps> = ({ preview = false, chatSess
 
   // Memoized fullscreen toggle button
   const ScreenSizeToggleButton = useMemo(() => {
-    if (!shouldToggleScreenSize || hideFullScreenButton === true || hideFullScreenButton === "true" || isMobileSDK) {
+    if (!shouldToggleScreenSize || !showFullScreenButton || isMobileSDK) {
       return null;
     }
 
@@ -576,11 +576,11 @@ const ChatbotHeader: React.FC<ChatbotHeaderProps> = ({ preview = false, chatSess
         <Maximize2 size={22} color={iconColor} style={{ transform: 'rotate(90deg)' }} />
       </div>
     );
-  }, [shouldToggleScreenSize, hideFullScreenButton, fullScreen, toggleFullScreen, iconColor]);
+  }, [shouldToggleScreenSize, showFullScreenButton, fullScreen, toggleFullScreen, iconColor]);
 
   // Memoized close button
   const CloseButton = useMemo(() => {
-    if (hideCloseButton === true || hideCloseButton === "true") return null;
+    if (!showCloseButton) return null;
 
     return (
       <div
@@ -591,7 +591,7 @@ const ChatbotHeader: React.FC<ChatbotHeaderProps> = ({ preview = false, chatSess
         <X size={22} color={iconColor} />
       </div>
     );
-  }, [hideCloseButton, handleCloseChatbot, iconColor]);
+  }, [showCloseButton, handleCloseChatbot, iconColor]);
 
   const handleToggleMinimize = () => {
     if (!isChatbotMinimized && fullScreen) {

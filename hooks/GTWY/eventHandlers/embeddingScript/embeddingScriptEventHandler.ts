@@ -22,6 +22,8 @@ interface InterfaceData {
   chatIcon?: string;
   allowBridgeSwitch?: boolean;
   hideCloseButton?: boolean;
+  showCloseButton?: boolean;
+  showFullScreenButton?: boolean;
   variables?: Record<string, any>;
   [key: string]: any; // Allow for other properties
   modelChanged?: string;
@@ -144,13 +146,21 @@ const useHandleGtwyEmbeddingScriptEvents = (eventHandler: EmbeddingScriptEventRe
       dispatch(setDataInInterfaceRedux(interfaceDataToUpdate));
     }
 
-    // Handle hideCloseButton and hideFullScreenButton separately
+    // Handle hideCloseButton / showCloseButton and hideFullScreenButton / showFullScreenButton separately
     if ('hideCloseButton' in receivedData) {
       dispatch(setDataInAppInfoReducer({ hideCloseButton: receivedData.hideCloseButton }));
     }
 
+    if ('showCloseButton' in receivedData) {
+      dispatch(setDataInAppInfoReducer({ showCloseButton: receivedData.showCloseButton }));
+    }
+
     if ('hideFullScreenButton' in receivedData) {
       dispatch(setDataInAppInfoReducer({ hideFullScreenButton: receivedData.hideFullScreenButton }));
+    }
+
+    if ('showFullScreenButton' in receivedData) {
+      dispatch(setDataInAppInfoReducer({ showFullScreenButton: receivedData.showFullScreenButton }));
     }
   }
 
