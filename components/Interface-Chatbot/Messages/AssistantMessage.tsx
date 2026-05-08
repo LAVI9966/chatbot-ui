@@ -182,28 +182,35 @@ const AssistantMessageCard = React.memo(
                                         <p>Timeout reached. Please try again later.</p>
                                     </div>
                                 ) : message.image_urls?.length > 0 ? (
-                                    message?.image_urls?.map((image: any) => (
-                                        <div className="space-y-2" key={image}>
-                                            <ImageWithFallback
-                                                src={image?.image_url || image?.permanent_url}
-                                                permanentUrl={image?.permanent_url}
-                                                alt="Loading image, please wait..."
-                                                width={400}
-                                                height={400}
-                                                loading="lazy"
-                                                className="w-full max-h-[400px] min-h-[100px] rounded-lg object-cover"
-                                            />
-                                            <a
-                                                href={image?.image_url || image?.permanent_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="btn btn-ghost btn-sm w-full text-primary flex items-center justify-center"
-                                            >
-                                                <Maximize2 className="w-4 h-4 mr-2" />
-                                                View Full Image
-                                            </a>
-                                        </div>
-                                    ))
+                                    message?.image_urls?.map((image: any, idx: number) => {
+                                        const isString = typeof image === "string";
+                                        const src = isString ? image : (image?.image_url || image?.permanent_url || image?.url);
+                                        const perm = isString ? image : (image?.permanent_url || image?.image_url || image?.url);
+                                        const key = src || perm || `img_${idx}`;
+
+                                        return (
+                                            <div className="space-y-2" key={key}>
+                                                <ImageWithFallback
+                                                    src={src}
+                                                    permanentUrl={perm}
+                                                    alt="Loading image, please wait..."
+                                                    width={400}
+                                                    height={400}
+                                                    loading="lazy"
+                                                    className="w-full max-h-[400px] min-h-[100px] rounded-lg object-cover"
+                                                />
+                                                <a
+                                                    href={src}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="btn btn-ghost btn-sm w-full text-primary flex items-center justify-center"
+                                                >
+                                                    <Maximize2 className="w-4 h-4 mr-2" />
+                                                    View Full Image
+                                                </a>
+                                            </div>
+                                        );
+                                    })
                                 ) : (
                                     <div className="prose dark:prose-invert break-words" style={{ color: theme.palette.text.primary }}>
                                         {planning ? (
