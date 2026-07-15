@@ -355,19 +355,27 @@
         }
 
         async fetchChatbotDetails() {
-            try {
-                const script = document.getElementById('chatbot-main-script');
-                const embedToken = script?.getAttribute('embedToken');
-                const interfaceId = script?.getAttribute('interface_id');
+            const script = document.getElementById('chatbot-main-script');
+            const embedToken = script?.getAttribute('embedToken');
+            const interfaceId = script?.getAttribute('interface_id');
 
-                const requestOptions = embedToken
-                    ? this.createTokenBasedRequest(embedToken)
-                    : this.createAnonymousRequest(interfaceId);
+            const requestOptions = embedToken
+                ? this.createTokenBasedRequest(embedToken)
+                : this.createAnonymousRequest(interfaceId);
 
-                const response = await fetch(this.urls.login, requestOptions);
-                return response.json();
-            } catch (error) {
-                console.error('Fetch login user error:', error)
+            const maxRetries = 3;
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    const response = await fetch(this.urls.login, requestOptions);
+                    return await response.json();
+                } catch (error) {
+                    if (attempt === maxRetries) {
+                        console.error('Fetch login user error after max retries:', error);
+                        throw error;
+                    }
+                    console.warn(`Fetch login user failed (attempt ${attempt + 1}/${maxRetries}). Retrying in 1s...`, error);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
             }
         }
 
