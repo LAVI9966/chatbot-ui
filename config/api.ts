@@ -336,7 +336,7 @@ export async function getSubscribeChatbotDetailsApi({
 
 export async function getServiceModelsApi(service: string): Promise<any> {
     try {
-        const response = await axios.get(`http://localhost:7072/api/service/${service}`);
+        const response = await axios.get(`${URL}/api/service/${service}`);
         return response?.data;
     } catch (error) {
         console.error(`Error fetching models for service "${service}":`, error);
