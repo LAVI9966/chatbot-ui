@@ -48,11 +48,79 @@ export const formatErrorMessage = (errorData: any): string => {
 };
 
 /**
+ * Keys that carry the error itself (or transport metadata) rather than
+ * extra context worth showing to the user.
+ */
+const NON_CONTEXT_DETAIL_KEYS = new Set([
+    "error",
+    "errors",
+    "message",
+    "detail",
+    "details",
+    "success",
+    "status",
+    "statusCode",
+    "status_code",
+    "code",
+]);
+
+/** Turns `API_KEY_LIMIT_EXCEEDED` into `API key limit exceeded.` */
+const humanizeErrorCode = (rawError: string): string => {
+    const trimmed = rawError.trim();
+    if (!/^[A-Z][A-Z0-9]*(_[A-Z0-9]+)+$/.test(trimmed)) return trimmed;
+
+    const words = trimmed.toLowerCase().split("_");
+    const sentence = words
+        .map((word, index) =>
+            index === 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word
+        )
+        .join(" ");
+    return `${sentence}.`;
+};
+
+/** Turns `current_usage` into `Current usage`. */
+const humanizeKey = (key: string): string => {
+    const words = key
+        .replace(/[_-]+/g, " ")
+        .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+        .toLowerCase()
+        .trim();
+    return words.charAt(0).toUpperCase() + words.slice(1);
+};
+
+/**
+ * Appends any extra scalar fields on the error detail as context, so payloads
+ * like `{ error: "API_KEY_LIMIT_EXCEEDED", current_usage: 10, limit_value: 5 }`
+ * surface their numbers without needing a per-error-code branch.
+ */
+const withDetailContext = (message: string, detail: any): string => {
+    if (!detail || typeof detail !== "object" || Array.isArray(detail)) return message;
+
+    const context = Object.entries(detail)
+        .filter(
+            ([key, value]) =>
+                !NON_CONTEXT_DETAIL_KEYS.has(key) &&
+                value !== undefined &&
+                value !== null &&
+                value !== "" &&
+                (typeof value === "string" ||
+                    typeof value === "number" ||
+                    typeof value === "boolean")
+        )
+        .map(([key, value]) => `${humanizeKey(key)}: ${value}`)
+        .join(", ");
+
+    if (!context) return message;
+    return `${message.replace(/[.\s]+$/, "")}. ${context}`;
+};
+
+/**
  * Extracts a human-readable error message from an API error/response object.
  *
  * Priority order:
- *   1. `error.response.data.detail.error` (e.g. `"Agent has been deleted"`;
- *      `API_KEY_LIMIT_EXCEEDED` is formatted with `current_usage`/`limit_value`)
+ *   1. `error.response.data.detail.error` (e.g. `"Agent has been deleted"`; error
+ *      codes like `API_KEY_LIMIT_EXCEEDED` are humanized, and any extra scalar
+ *      fields on `detail` — e.g. `current_usage`/`limit_value` — are appended)
  *   2. `error.response.data.detail` (if string)
  *   3. `error.response.data.error` (string or object)
  *   4. `error.response.data.message` / `error.message`
@@ -73,21 +141,10 @@ export const getApiErrorMessage = (error: any): string => {
 
     if (detail?.error) {
         if (typeof detail.error === "string") {
-            const rawError = detail.error;
-            const normalized = rawError.toUpperCase();
-            if (
-                normalized.includes("API_KEY_LIMIT_EXCEEDED") ||
-                normalized.includes("APIKEY_LIMIT_EXCEEDED")
-            ) {
-                const { current_usage, limit_value } = detail;
-                if (current_usage !== undefined && limit_value !== undefined) {
-                    return `API key limit exceeded. Current usage: ${current_usage}, Limit: ${limit_value}`;
-                }
-                return "API key limit exceeded.";
-            }
-            return rawError;
+            const message = humanizeErrorCode(detail.error);
+            return withDetailContext(message, detail);
         }
-        return formatErrorMessage(detail.error);
+        return withDetailContext(formatErrorMessage(detail.error), detail);
     }
 
     if (typeof source?.error === "string") return source.error;
